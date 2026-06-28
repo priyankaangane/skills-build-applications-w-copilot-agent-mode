@@ -1,7 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import mongoose from 'mongoose';
 import cors from 'cors';
+import { connectDatabase } from './database';
 import User from './models/user';
 import Team from './models/team';
 import Activity from './models/activity';
@@ -51,10 +51,10 @@ app.get('/api/workouts', async (_req, res) => {
 
 const startServer = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/octofit_db');
-    console.log('Connected to MongoDB');
+    await connectDatabase();
   } catch (error) {
-    console.error('MongoDB connection error:', error);
+    console.error('Failed to connect to MongoDB. Exiting.');
+    process.exit(1);
   }
 
   app.listen(port, '0.0.0.0', () => {

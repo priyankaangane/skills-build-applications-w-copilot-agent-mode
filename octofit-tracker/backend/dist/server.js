@@ -5,8 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const dotenv_1 = __importDefault(require("dotenv"));
-const mongoose_1 = __importDefault(require("mongoose"));
 const cors_1 = __importDefault(require("cors"));
+const database_1 = require("./database");
 const user_1 = __importDefault(require("./models/user"));
 const team_1 = __importDefault(require("./models/team"));
 const activity_1 = __importDefault(require("./models/activity"));
@@ -46,11 +46,11 @@ app.get('/api/workouts', async (_req, res) => {
 });
 const startServer = async () => {
     try {
-        await mongoose_1.default.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/octofit_db');
-        console.log('Connected to MongoDB');
+        await (0, database_1.connectDatabase)();
     }
     catch (error) {
-        console.error('MongoDB connection error:', error);
+        console.error('Failed to connect to MongoDB. Exiting.');
+        process.exit(1);
     }
     app.listen(port, '0.0.0.0', () => {
         console.log(`Backend listening on port ${port}`);
