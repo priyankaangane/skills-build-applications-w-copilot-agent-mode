@@ -1,87 +1,78 @@
-import { useEffect, useState } from 'react';
-import { normalizeApiList } from './api';
+import { useEffect, useState } from 'react'
+import { fetchApi } from './api.js'
 
-const apiBaseUrl = import.meta.env.VITE_CODESPACE_NAME
-  ? `https://${import.meta.env.VITE_CODESPACE_NAME}-8000.app.github.dev/api`
-  : 'http://localhost:8000/api';
-
-function formatDate(value) {
-  return new Date(value).toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
-
-export default function Teams() {
-  const [teams, setTeams] = useState([]);
-  const [status, setStatus] = useState('loading');
-  const [error, setError] = useState(null);
+function Teams() {
+  const [teams, setTeams] = useState([])
+  const [meta, setMeta] = useState(null)
+  const [error, setError] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    let cancelled = false;
-    setStatus('loading');
-    setError(null);
-
-    fetch(`${apiBaseUrl}/teams/`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`Failed to load teams: ${response.statusText}`);
-        }
-        return response.json();
-      })
-      .then((payload) => {
-        if (!cancelled) {
-          setTeams(normalizeApiList(payload));
-          setStatus('ready');
-        }
+    const controller = new AbortController()
+    fetchApi('teams', controller.signal)
+      .then(({ items, meta: pageMeta }) => {
+        setTeams(items)
+        setMeta(pageMeta)
       })
       .catch((err) => {
-        if (!cancelled) {
-          setError(err.message);
-          setStatus('error');
+        if (err.name !== 'AbortError') {
+          setError(err.message || 'Failed to load teams')
         }
-      });
+      })
+      .finally(() => setLoading(false))
 
-    return () => {
-      cancelled = true;
-    };
-  }, [apiBaseUrl]);
+    return () => controller.abort()
+  }, [])
 
   return (
-    <section className="card shadow-sm">
-      <div className="card-body">
-        <h2 className="h4 mb-3">Teams</h2>
-        {status === 'loading' && <p>Loading teams...</p>}
-        {status === 'error' && <div className="alert alert-danger">{error}</div>}
-        {status === 'ready' && teams.length === 0 && (
-          <div className="alert alert-warning">No teams currently available.</div>
-        )}
-        {status === 'ready' && teams.length > 0 && (
-          <div className="table-responsive">
-            <table className="table table-hover align-middle">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Description</th>
-                  <th>Members</th>
-                  <th>Created</th>
-                </tr>
-              </thead>
-              <tbody>
-                {teams.map((team) => (
-                  <tr key={team._id || team.name}>
-                    <td>{team.name}</td>
-                    <td>{team.description}</td>
-                    <td>{team.members}</td>
-                    <td>{team.createdAt ? formatDate(team.createdAt) : '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+    <section>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h2 className="h4 mb-1">Teams</h2>
+          <p className="text-muted mb-0">Team records and member counts from the backend.</p>
+        </div>
       </div>
+
+      {error && <div className="alert alert-danger">{error}</div>}
+      {loading && <div className="text-muted">Loading teams...</div>}
+
+      {!loading && !error && teams.length === 0 && (
+        <div className="alert alert-warning">No teams found.</div>
+      )}
+
+      {!loading && !error && teams.length > 0 && (
+        <div className="table-responsive">
+          <table className="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Members</th>
+                <th>Created At</th>
+              </tr>
+            </thead>
+            <tbody>
+              {teams.map((team, index) => (
+                <tr key={team._id ?? index}>
+                  <td>{team.name}</td>
+                  <td>{team.description}</td>
+                  <td>{team.members}</td>
+                  <td>{new Date(team.createdAt).toLocaleDateString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {meta && (
+        <div className="mt-3 text-muted small">
+          {meta.page != null ? `Page ${meta.page}` : meta.currentPage != null ? `Page ${meta.currentPage}` : null}
+          {meta.total != null && ` · ${meta.total} total teams`}
+        </div>
+      )}
     </section>
-  );
+  )
 }
+
+export default Teams

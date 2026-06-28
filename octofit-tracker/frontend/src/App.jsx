@@ -1,87 +1,93 @@
 import './App.css'
-import { NavLink, Route, Routes } from 'react-router-dom'
-import Activities from './components/Activities'
-import Leaderboard from './components/Leaderboard'
-import Teams from './components/Teams'
-import Users from './components/Users'
-import Workouts from './components/Workouts'
+import { NavLink, Routes, Route, Navigate } from 'react-router-dom'
+import Activities from './components/Activities.jsx'
+import Leaderboard from './components/Leaderboard.jsx'
+import Teams from './components/Teams.jsx'
+import Users from './components/Users.jsx'
+import Workouts from './components/Workouts.jsx'
 
-function Home({ apiBaseUrl, codespaceName }) {
+const pages = [
+  { path: '/activities', label: 'Activities' },
+  { path: '/leaderboard', label: 'Leaderboard' },
+  { path: '/teams', label: 'Teams' },
+  { path: '/users', label: 'Users' },
+  { path: '/workouts', label: 'Workouts' },
+]
+
+const codespaceName = import.meta.env.VITE_CODESPACE_NAME?.trim()
+const apiPreviewUrl = codespaceName
+  ? `https://${codespaceName}-8000.app.github.dev/api`
+  : 'http://localhost:8000/api'
+
+const navLinkClass = ({ isActive }) =>
+  `nav-link${isActive ? ' active' : ''}`
+
+function Home() {
   return (
-    <div>
-      <div className="card shadow-sm mb-4">
-        <div className="card-body p-5">
-          <h1 className="display-6 fw-bold mb-3">OctoFit Tracker</h1>
-          <p className="lead text-muted mb-4">
-            A modern multi-tier fitness tracking experience for teams,
-            workouts, and leaderboard challenges.
-          </p>
-          <div className="d-flex gap-3 flex-wrap">
-            <span className="badge bg-primary-subtle text-primary-emphasis">React 19</span>
-            <span className="badge bg-success-subtle text-success-emphasis">Vite</span>
-            <span className="badge bg-warning-subtle text-warning-emphasis">Express + TypeScript</span>
-            <span className="badge bg-info-subtle text-info-emphasis">MongoDB + Mongoose</span>
-          </div>
-        </div>
-      </div>
+    <>
       <div className="alert alert-secondary">
-        API base URL:
-        <code className="ms-2">{apiBaseUrl}</code>
+        Use the navigation above to browse OctoFit Tracker API data.
       </div>
-      {!codespaceName && (
-        <div className="alert alert-warning">
-          VITE_CODESPACE_NAME is not defined. The application is falling back to{' '}
-          <code>http://localhost:8000/api</code>. Define <code>VITE_CODESPACE_NAME</code> in <code>.env.local</code> for codespace-managed HTTPS routing.
-        </div>
-      )}
-    </div>
+      <div className="mb-4">
+        <p className="text-muted">
+          Frontend requests are built from <code>import.meta.env.VITE_CODESPACE_NAME</code>.
+          If this value is not set, the app safely falls back to <code>http://localhost:8000/api</code>.
+        </p>
+        <p className="small text-break">
+          Current API base: <code>{apiPreviewUrl}</code>
+        </p>
+      </div>
+      <div className="row row-cols-1 row-cols-md-2 g-3">
+        {pages.map((page) => (
+          <div className="col" key={page.path}>
+            <div className="card h-100 border-0 shadow-sm">
+              <div className="card-body">
+                <h5 className="card-title mb-2">{page.label}</h5>
+                <p className="card-text text-muted">
+                  View the {page.label.toLowerCase()} data returned by the back-end API.
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
   )
 }
 
-function App({ apiBaseUrl, codespaceName }) {
-  const linkClass = ({ isActive }) =>
-    `nav-link${isActive ? ' active fw-semibold' : ' text-secondary'}`
-
+function App() {
   return (
     <main className="container py-5">
       <div className="row justify-content-center">
-        <div className="col-xl-10 col-lg-12">
-          <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
-            <div>
-              <h1 className="h2 mb-2">OctoFit Tracker</h1>
-              <p className="text-muted mb-0">Browse users, teams, activities, workouts, and the leaderboard.</p>
+        <div className="col-xl-10">
+          <div className="card shadow-sm border-0">
+            <div className="card-body p-4 p-lg-5">
+              <div className="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
+                <div>
+                  <h1 className="display-6 fw-bold mb-2">OctoFit Tracker</h1>
+                  <p className="lead text-muted mb-0">
+                    A modern multi-tier fitness tracker using React, Vite, Express, and MongoDB.
+                  </p>
+                </div>
+                <nav className="nav nav-pills flex-wrap gap-2">
+                  {pages.map((page) => (
+                    <NavLink key={page.path} to={page.path} className={navLinkClass}>
+                      {page.label}
+                    </NavLink>
+                  ))}
+                </nav>
+              </div>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/activities" element={<Activities />} />
+                <Route path="/leaderboard" element={<Leaderboard />} />
+                <Route path="/teams" element={<Teams />} />
+                <Route path="/users" element={<Users />} />
+                <Route path="/workouts" element={<Workouts />} />
+                <Route path="*" element={<Navigate replace to="/" />} />
+              </Routes>
             </div>
-            <nav className="nav nav-pills">
-              <NavLink to="/" className={linkClass} end>
-                Home
-              </NavLink>
-              <NavLink to="/users" className={linkClass}>
-                Users
-              </NavLink>
-              <NavLink to="/teams" className={linkClass}>
-                Teams
-              </NavLink>
-              <NavLink to="/activities" className={linkClass}>
-                Activities
-              </NavLink>
-              <NavLink to="/workouts" className={linkClass}>
-                Workouts
-              </NavLink>
-              <NavLink to="/leaderboard" className={linkClass}>
-                Leaderboard
-              </NavLink>
-            </nav>
           </div>
-
-          <Routes>
-            <Route path="/" element={<Home apiBaseUrl={apiBaseUrl} codespaceName={codespaceName} />} />
-            <Route path="/users" element={<Users />} />
-            <Route path="/teams" element={<Teams />} />
-            <Route path="/activities" element={<Activities />} />
-            <Route path="/workouts" element={<Workouts />} />
-            <Route path="/leaderboard" element={<Leaderboard />} />
-            <Route path="*" element={<Home apiBaseUrl={apiBaseUrl} codespaceName={codespaceName} />} />
-          </Routes>
         </div>
       </div>
     </main>

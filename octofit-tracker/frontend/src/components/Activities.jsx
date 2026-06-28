@@ -1,91 +1,84 @@
-import { useEffect, useState } from 'react';
-import { normalizeApiList } from './api';
+import { useEffect, useState } from 'react'
+import { fetchApi } from './api.js'
 
-const apiBaseUrl = import.meta.env.VITE_CODESPACE_NAME
-  ? `https://${import.meta.env.VITE_CODESPACE_NAME}-8000.app.github.dev/api`
-  : 'http://localhost:8000/api';
-
-function formatDate(value) {
-  return new Date(value).toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
-
-export default function Activities() {
-  const [activities, setActivities] = useState([]);
-  const [status, setStatus] = useState('loading');
-  const [error, setError] = useState(null);
+function Activities() {
+  const [activities, setActivities] = useState([])
+  const [meta, setMeta] = useState(null)
+  const [error, setError] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    let cancelled = false;
-    setStatus('loading');
-    setError(null);
-
-    fetch(`${apiBaseUrl}/activities/`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`Failed to load activities: ${response.statusText}`);
-        }
-        return response.json();
-      })
-      .then((payload) => {
-        if (!cancelled) {
-          setActivities(normalizeApiList(payload));
-          setStatus('ready');
-        }
+    const controller = new AbortController()
+    fetchApi('activities', controller.signal)
+      .then(({ items, meta: pageMeta }) => {
+        setActivities(items)
+        setMeta(pageMeta)
       })
       .catch((err) => {
-        if (!cancelled) {
-          setError(err.message);
-          setStatus('error');
+        if (err.name !== 'AbortError') {
+          setError(err.message || 'Failed to load activities')
         }
-      });
+      })
+      .finally(() => setLoading(false))
 
-    return () => {
-      cancelled = true;
-    };
-  }, [apiBaseUrl]);
+    return () => controller.abort()
+  }, [])
 
   return (
-    <section className="card shadow-sm">
-      <div className="card-body">
-        <h2 className="h4 mb-3">Recent Activities</h2>
-        {status === 'loading' && <p>Loading activity data...</p>}
-        {status === 'error' && <div className="alert alert-danger">{error}</div>}
-        {status === 'ready' && activities.length === 0 && (
-          <div className="alert alert-warning">No activities available.</div>
-        )}
-        {status === 'ready' && activities.length > 0 && (
-          <div className="table-responsive">
-            <table className="table table-hover align-middle">
-              <thead>
-                <tr>
-                  <th>User</th>
-                  <th>Activity</th>
-                  <th>Distance</th>
-                  <th>Duration</th>
-                  <th>Calories</th>
-                  <th>Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {activities.map((activity) => (
-                  <tr key={activity._id || `${activity.user}-${activity.date}`}> 
-                    <td>{activity.user}</td>
-                    <td>{activity.type}</td>
-                    <td>{activity.distanceKm ?? '—'} km</td>
-                    <td>{activity.durationMin ?? '—'} min</td>
-                    <td>{activity.calories ?? '—'}</td>
-                    <td>{activity.date ? formatDate(activity.date) : '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+    <section>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h2 className="h4 mb-1">Activities</h2>
+          <p className="text-muted mb-0">
+            Recent activity records from the OctoFit back end.
+          </p>
+        </div>
       </div>
+
+      {error && <div className="alert alert-danger">{error}</div>}
+      {loading && <div className="text-muted">Loading activities...</div>}
+
+      {!loading && !error && activities.length === 0 && (
+        <div className="alert alert-warning">No activities found.</div>
+      )}
+
+      {!loading && !error && activities.length > 0 && (
+        <div className="table-responsive">
+          <table className="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Type</th>
+                <th>Distance (km)</th>
+                <th>Duration (min)</th>
+                <th>Calories</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {activities.map((activity, index) => (
+                <tr key={activity._id ?? index}>
+                  <td>{activity.user}</td>
+                  <td>{activity.type}</td>
+                  <td>{activity.distanceKm}</td>
+                  <td>{activity.durationMin}</td>
+                  <td>{activity.calories}</td>
+                  <td>{new Date(activity.date).toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {meta && (
+        <div className="mt-3 text-muted small">
+          {meta.page != null ? `Page ${meta.page}` : meta.currentPage != null ? `Page ${meta.currentPage}` : null}
+          {meta.total != null && ` · ${meta.total} total records`}
+        </div>
+      )}
     </section>
-  );
+  )
 }
+
+export default Activities

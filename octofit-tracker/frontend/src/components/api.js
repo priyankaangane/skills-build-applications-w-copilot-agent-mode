@@ -1,37 +1,37 @@
-export const codespaceName = import.meta.env.VITE_CODESPACE_NAME;
+const codespaceName = import.meta.env.VITE_CODESPACE_NAME?.trim()
 
-export const apiBaseUrl = codespaceName
+export const API_BASE_URL = codespaceName
   ? `https://${codespaceName}-8000.app.github.dev/api`
-  : 'http://localhost:8000/api';
+  : 'http://localhost:8000/api'
 
-export function normalizeApiList(payload) {
+const normalizeResponse = (payload) => {
   if (Array.isArray(payload)) {
-    return payload;
+    return payload
   }
-  if (!payload || typeof payload !== 'object') {
-    return [];
+
+  if (payload?.data) {
+    return Array.isArray(payload.data) ? payload.data : [payload.data]
   }
-  if (Array.isArray(payload.data)) {
-    return payload.data;
+
+  if (payload?.results) {
+    return Array.isArray(payload.results) ? payload.results : [payload.results]
   }
-  if (Array.isArray(payload.results)) {
-    return payload.results;
-  }
-  if (Array.isArray(payload.items)) {
-    return payload.items;
-  }
-  if (Array.isArray(payload.data?.items)) {
-    return payload.data.items;
-  }
-  return [];
+
+  return []
 }
 
-export async function fetchApiResource(apiBaseUrl, resource) {
-  const url = `${apiBaseUrl}/${resource}/`;
-  const response = await fetch(url);
+export const fetchApi = async (component, signal) => {
+  const url = `${API_BASE_URL}/${component}`
+  const response = await fetch(url, { signal })
+
   if (!response.ok) {
-    throw new Error(`Failed to load ${resource}: ${response.statusText}`);
+    const errorText = await response.text()
+    throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorText}`)
   }
-  const payload = await response.json();
-  return normalizeApiList(payload);
+
+  const payload = await response.json()
+  return {
+    items: normalizeResponse(payload),
+    meta: payload?.meta ?? payload?.pagination ?? null,
+  }
 }

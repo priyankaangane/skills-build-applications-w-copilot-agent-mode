@@ -4,18 +4,16 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.jsx'
-import { apiBaseUrl, codespaceName } from './components/api'
 
-if (!codespaceName) {
-  console.warn(
-    'VITE_CODESPACE_NAME is not defined. Falling back to http://localhost:8000/api. Define it in .env.local for Codespaces routing.',
-  )
+const rootElement = document.getElementById('root')
+if (!rootElement) {
+  throw new Error('Root element not found')
 }
 
-createRoot(document.getElementById('root')).render(
+createRoot(rootElement).render(
   <StrictMode>
     <BrowserRouter>
-      <App apiBaseUrl={apiBaseUrl} codespaceName={codespaceName} />
+      <App />
     </BrowserRouter>
   </StrictMode>,
 )
