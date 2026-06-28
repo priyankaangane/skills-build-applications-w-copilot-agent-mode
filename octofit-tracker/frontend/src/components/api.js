@@ -27,7 +27,7 @@ export function normalizeApiList(payload) {
 }
 
 export async function fetchApiResource(apiBaseUrl, resource) {
-  const url = `${apiBaseUrl}/${resource}`;
+  const url = `${apiBaseUrl}/${resource}/`;
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`Failed to load ${resource}: ${response.statusText}`);

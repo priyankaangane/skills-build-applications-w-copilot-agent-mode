@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { fetchApiResource } from './api';
+import { apiBaseUrl, fetchApiResource } from './api';
 
-export default function Workouts({ apiBaseUrl }) {
+export default function Workouts() {
   const [workouts, setWorkouts] = useState([]);
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState(null);

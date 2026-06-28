@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fetchApiResource } from './api';
+import { apiBaseUrl, fetchApiResource } from './api';
 
 function formatDate(value) {
   return new Date(value).toLocaleDateString(undefined, {
@@ -9,7 +9,7 @@ function formatDate(value) {
   });
 }
 
-export default function Users({ apiBaseUrl }) {
+export default function Users() {
   const [users, setUsers] = useState([]);
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState(null);

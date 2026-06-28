@@ -75,11 +75,11 @@ function App({ apiBaseUrl, codespaceName }) {
 
           <Routes>
             <Route path="/" element={<Home apiBaseUrl={apiBaseUrl} codespaceName={codespaceName} />} />
-            <Route path="/users" element={<Users apiBaseUrl={apiBaseUrl} />} />
-            <Route path="/teams" element={<Teams apiBaseUrl={apiBaseUrl} />} />
-            <Route path="/activities" element={<Activities apiBaseUrl={apiBaseUrl} />} />
-            <Route path="/workouts" element={<Workouts apiBaseUrl={apiBaseUrl} />} />
-            <Route path="/leaderboard" element={<Leaderboard apiBaseUrl={apiBaseUrl} />} />
+            <Route path="/users" element={<Users />} />
+            <Route path="/teams" element={<Teams />} />
+            <Route path="/activities" element={<Activities />} />
+            <Route path="/workouts" element={<Workouts />} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="*" element={<Home apiBaseUrl={apiBaseUrl} codespaceName={codespaceName} />} />
           </Routes>
         </div>
