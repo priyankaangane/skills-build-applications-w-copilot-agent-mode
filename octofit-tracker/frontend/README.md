@@ -14,3 +14,14 @@ The React Compiler is not enabled on this template because of its impact on dev 
 ## Expanding the Oxlint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+
+## Environment variables
+
+This frontend uses Vite environment variables to determine the backend API URL.
+
+- `VITE_CODESPACE_NAME` should be defined when running inside GitHub Codespaces.
+- The application builds the API URL as:
+  `https://${import.meta.env.VITE_CODESPACE_NAME}-8000.app.github.dev/api/[resource]`
+- If `VITE_CODESPACE_NAME` is unset, the frontend safely falls back to `http://localhost:8000/api`.
+
+For local setup, define `VITE_CODESPACE_NAME` in `.env.local` or use a `.env.example` file as a template.
