@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const cors_1 = __importDefault(require("cors"));
-const database_1 = require("./database");
+const database_1 = require("./config/database");
 const user_1 = __importDefault(require("./models/user"));
 const team_1 = __importDefault(require("./models/team"));
 const activity_1 = __importDefault(require("./models/activity"));

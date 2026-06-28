@@ -1,4 +1,4 @@
-import { connectDatabase, disconnectDatabase } from '../database';
+import { connectDatabase, disconnectDatabase } from '../config/database';
 import User from '../models/user';
 import Team from '../models/team';
 import Activity from '../models/activity';

@@ -1,7 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
-import { connectDatabase } from './database';
+import { connectDatabase } from './config/database';
 import User from './models/user';
 import Team from './models/team';
 import Activity from './models/activity';
