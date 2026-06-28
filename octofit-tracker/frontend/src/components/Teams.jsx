@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react';
-import { apiBaseUrl, fetchApiResource } from './api';
+import { normalizeApiList } from './api';
+
+const codespaceName = import.meta.env.VITE_CODESPACE_NAME;
+const apiBaseUrl = codespaceName
+  ? `https://${codespaceName}-8000.app.github.dev/api`
+  : 'http://localhost:8000/api';
 
 function formatDate(value) {
   return new Date(value).toLocaleDateString(undefined, {
@@ -19,10 +24,16 @@ export default function Teams() {
     setStatus('loading');
     setError(null);
 
-    fetchApiResource(apiBaseUrl, 'teams')
-      .then((data) => {
+    fetch(`${apiBaseUrl}/teams`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Failed to load teams: ${response.statusText}`);
+        }
+        return response.json();
+      })
+      .then((payload) => {
         if (!cancelled) {
-          setTeams(data);
+          setTeams(normalizeApiList(payload));
           setStatus('ready');
         }
       })

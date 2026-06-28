@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react';
-import { apiBaseUrl, fetchApiResource } from './api';
+import { normalizeApiList } from './api';
+
+const codespaceName = import.meta.env.VITE_CODESPACE_NAME;
+const apiBaseUrl = codespaceName
+  ? `https://${codespaceName}-8000.app.github.dev/api`
+  : 'http://localhost:8000/api';
 
 export default function Workouts() {
   const [workouts, setWorkouts] = useState([]);
@@ -11,10 +16,16 @@ export default function Workouts() {
     setStatus('loading');
     setError(null);
 
-    fetchApiResource(apiBaseUrl, 'workouts')
-      .then((data) => {
+    fetch(`${apiBaseUrl}/workouts`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Failed to load workouts: ${response.statusText}`);
+        }
+        return response.json();
+      })
+      .then((payload) => {
         if (!cancelled) {
-          setWorkouts(data);
+          setWorkouts(normalizeApiList(payload));
           setStatus('ready');
         }
       })

@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react';
-import { apiBaseUrl, fetchApiResource } from './api';
+import { normalizeApiList } from './api';
+
+const codespaceName = import.meta.env.VITE_CODESPACE_NAME;
+const apiBaseUrl = codespaceName
+  ? `https://${codespaceName}-8000.app.github.dev/api`
+  : 'http://localhost:8000/api';
 
 export default function Leaderboard() {
   const [entries, setEntries] = useState([]);
@@ -11,10 +16,16 @@ export default function Leaderboard() {
     setStatus('loading');
     setError(null);
 
-    fetchApiResource(apiBaseUrl, 'leaderboard')
-      .then((data) => {
+    fetch(`${apiBaseUrl}/leaderboard`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Failed to load leaderboard: ${response.statusText}`);
+        }
+        return response.json();
+      })
+      .then((payload) => {
         if (!cancelled) {
-          setEntries(data);
+          setEntries(normalizeApiList(payload));
           setStatus('ready');
         }
       })
