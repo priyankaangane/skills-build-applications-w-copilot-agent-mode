@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
 
+// Connect to the OctoFit MongoDB data tier using mongoose.
+// When running in Codespaces, this still uses the local MongoDB URL.
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/octofit_db';
 
 export const connectDatabase = async (): Promise<void> => {
