@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react'
-import { fetchApi } from './api.js'
+import { normalizeResponse } from './api.js'
+
+const codespaceName = import.meta.env.VITE_CODESPACE_NAME?.trim()
+const ACTIVITIES_ENDPOINT = codespaceName
+  ? `https://${codespaceName}-8000.app.github.dev/api/activities/`
+  : 'http://localhost:8000/api/activities/'
 
 function Activities() {
   const [activities, setActivities] = useState([])
@@ -9,7 +14,15 @@ function Activities() {
 
   useEffect(() => {
     const controller = new AbortController()
-    fetchApi('activities', controller.signal)
+    fetch(ACTIVITIES_ENDPOINT, { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorText = await response.text()
+          throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorText}`)
+        }
+        const payload = await response.json()
+        return { items: normalizeResponse(payload), meta: payload?.meta ?? payload?.pagination ?? null }
+      })
       .then(({ items, meta: pageMeta }) => {
         setActivities(items)
         setMeta(pageMeta)

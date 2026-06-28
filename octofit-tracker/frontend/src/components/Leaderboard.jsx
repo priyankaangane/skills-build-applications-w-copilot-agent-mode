@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react'
-import { fetchApi } from './api.js'
+import { normalizeResponse } from './api.js'
+
+const codespaceName = import.meta.env.VITE_CODESPACE_NAME?.trim()
+const LEADERBOARD_ENDPOINT = codespaceName
+  ? `https://${codespaceName}-8000.app.github.dev/api/leaderboard/`
+  : 'http://localhost:8000/api/leaderboard/'
 
 function Leaderboard() {
   const [entries, setEntries] = useState([])
@@ -9,7 +14,15 @@ function Leaderboard() {
 
   useEffect(() => {
     const controller = new AbortController()
-    fetchApi('leaderboard', controller.signal)
+    fetch(LEADERBOARD_ENDPOINT, { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorText = await response.text()
+          throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorText}`)
+        }
+        const payload = await response.json()
+        return { items: normalizeResponse(payload), meta: payload?.meta ?? payload?.pagination ?? null }
+      })
       .then(({ items, meta: pageMeta }) => {
         setEntries(items)
         setMeta(pageMeta)

@@ -21,7 +21,8 @@ const normalizeResponse = (payload) => {
 }
 
 export const fetchApi = async (component, signal) => {
-  const url = `${API_BASE_URL}/${component}`
+  const safeComponent = component.replace(/^\/+|\/+$/g, '')
+  const url = `${API_BASE_URL}/${safeComponent}/`
   const response = await fetch(url, { signal })
 
   if (!response.ok) {

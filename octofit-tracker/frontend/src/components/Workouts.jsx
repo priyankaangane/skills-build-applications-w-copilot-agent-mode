@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react'
-import { fetchApi } from './api.js'
+import { normalizeResponse } from './api.js'
+
+const codespaceName = import.meta.env.VITE_CODESPACE_NAME?.trim()
+const WORKOUTS_ENDPOINT = codespaceName
+  ? `https://${codespaceName}-8000.app.github.dev/api/workouts/`
+  : 'http://localhost:8000/api/workouts/'
 
 function Workouts() {
   const [workouts, setWorkouts] = useState([])
@@ -9,7 +14,15 @@ function Workouts() {
 
   useEffect(() => {
     const controller = new AbortController()
-    fetchApi('workouts', controller.signal)
+    fetch(WORKOUTS_ENDPOINT, { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorText = await response.text()
+          throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorText}`)
+        }
+        const payload = await response.json()
+        return { items: normalizeResponse(payload), meta: payload?.meta ?? payload?.pagination ?? null }
+      })
       .then(({ items, meta: pageMeta }) => {
         setWorkouts(items)
         setMeta(pageMeta)
